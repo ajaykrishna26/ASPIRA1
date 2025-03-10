@@ -25,7 +25,7 @@ a:hover {
 body {
   margin: 0; /* Reset margin to 0 */
   min-height: auto; /* Minimum height to cover the viewport */
-  background-image: url('assets/p3.avif');
+  /* background-image: url('assets/p3.avif'); */
   background-size: cover;
   background-repeat: no-repeat; /* Prevent background from repeating */
   background-attachment: fixed; /* Keeps the background fixed */

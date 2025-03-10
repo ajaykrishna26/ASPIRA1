@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { Button, Container, Typography, TextField, Card, Box } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import { styled } from "@mui/material/styles";
+
+
+const Background = styled(Box)({
+  height: "100vh",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  background: `url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRIpYb_mEEhExarwW2UmYGrCXYxFzfJZHnoGA&s') no-repeat center center/cover`,
+});
 
 // Sample Interview Questions
 const questions = [
@@ -41,7 +51,9 @@ const MockInterview = () => {
   };
 
   return (
-    <Box
+
+<Background>
+<Box
       sx={{
         width: "100vw",
         height: "100vh",
@@ -53,7 +65,7 @@ const MockInterview = () => {
         justifyContent: "center",
         padding: 2,
         overflow: "hidden",
-        background: "linear-gradient(135deg, #1e3c72, #2a5298)",
+        // background: "linear-gradient(135deg, #1e3c72, #2a5298)",
         backgroundSize: "cover",
         "&::before": {
           content: '""',
@@ -129,6 +141,7 @@ const MockInterview = () => {
         </Card>
       </Container>
     </Box>
+</Background>
   );
 };
 

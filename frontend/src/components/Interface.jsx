@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { Button, Container, Typography, TextField, Card, Box, Avatar } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import { styled } from "@mui/material/styles";
+
+const Background = styled(Box)({
+  height: "100vh",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  background: `url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRIpYb_mEEhExarwW2UmYGrCXYxFzfJZHnoGA&s') no-repeat center center/cover`,
+});
+
 
 const aiQuestions = [
   "What inspired you to choose this career?",
@@ -53,6 +63,7 @@ const Interface = () => {
   };
 
   return (
+    <Background>
     <Box
       sx={{
         width: "100vw",
@@ -61,8 +72,8 @@ const Interface = () => {
         alignItems: "center",
         justifyContent: "center",
         padding: 2,
-        background: "linear-gradient(135deg, #1e3c72, #2a5298)",
-        backgroundSize: "cover",
+        // background: "linear-gradient(135deg, #1e3c72, #2a5298)",
+        // backgroundSize: "cover",
       }}
     >
       <Container maxWidth="sm">
@@ -155,6 +166,7 @@ const Interface = () => {
         </Card>
       </Container>
     </Box>
+    </Background>
   );
 };
 

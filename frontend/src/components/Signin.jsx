@@ -1,5 +1,6 @@
 import * as React from "react";
 import {
+  
   Box,
   Button,
   Checkbox,
@@ -9,8 +10,9 @@ import {
   FormLabel,
   TextField,
   Typography,
-  Stack,
   Card as MuiCard,
+  Stack,
+  CardContent,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
@@ -46,17 +48,17 @@ const SignInContainer = styled(Stack)(({ theme }) => ({
 
 export default function SignIn({ onLogin }) {
   const navigate = useNavigate();
-  const [showForm, setShowForm] = React.useState(false);
   const [emailError, setEmailError] = React.useState(false);
   const [emailErrorMessage, setEmailErrorMessage] = React.useState("");
   const [passwordError, setPasswordError] = React.useState(false);
   const [passwordErrorMessage, setPasswordErrorMessage] = React.useState("");
 
-  React.useEffect(() => {
-    if (localStorage.getItem("isLoggedIn") === "true") {
-      navigate("/mock-interview");
-    }
-  }, [navigate]);
+  // Redirect if already logged in
+  // React.useEffect(() => {
+  //   if (localStorage.getItem("isLoggedIn") === "true") {
+  //     navigate("/mock-interview");
+  //   }
+  // }, [navigate]);
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -96,97 +98,75 @@ export default function SignIn({ onLogin }) {
     <>
       <CssBaseline />
       <SignInContainer>
-        {!showForm ? (
-          <Card variant="outlined">
-            <Typography variant="h4" sx={{ textAlign: "center" }}>
-              Welcome to AI Portal!
-            </Typography>
-            <Typography sx={{ textAlign: "center", color: "#bbbbbb" }}>
-              Click below to begin your AI journey.
-            </Typography>
-            <Button
-              variant="contained"
-              sx={{
-                backgroundColor: "#0077FF",
-                color: "white",
-                "&:hover": { backgroundColor: "#0057CC" },
-              }}
-              onClick={() => setShowForm(true)}
-            >
-              Get Started
-            </Button>
-          </Card>
-        ) : (
-          <Card variant="outlined">
-            <Typography component="h1" variant="h4" sx={{ textAlign: "center" }}>
-              Sign in
-            </Typography>
-            <Box component="form" onSubmit={handleSubmit} noValidate>
-              <FormControl fullWidth>
-                <FormLabel htmlFor="email" sx={{ color: "#ffffff" }}>
-                  Email
-                </FormLabel>
-                <TextField
-                  error={emailError}
-                  helperText={emailErrorMessage}
-                  id="email"
-                  type="email"
-                  name="email"
-                  required
-                  fullWidth
-                  variant="outlined"
-                  sx={{
-                    input: { color: "white" },
-                    "& .MuiOutlinedInput-root": {
-                      "& fieldset": { borderColor: "white" },
-                      "&:hover fieldset": { borderColor: "#66a3ff" },
-                    },
-                  }}
-                />
-              </FormControl>
-              <FormControl fullWidth>
-                <FormLabel htmlFor="password" sx={{ color: "#ffffff" }}>
-                  Password
-                </FormLabel>
-                <TextField
-                  error={passwordError}
-                  helperText={passwordErrorMessage}
-                  name="password"
-                  type="password"
-                  id="password"
-                  required
-                  fullWidth
-                  variant="outlined"
-                  sx={{
-                    input: { color: "white" },
-                    "& .MuiOutlinedInput-root": {
-                      "& fieldset": { borderColor: "white" },
-                      "&:hover fieldset": { borderColor: "#66a3ff" },
-                    },
-                  }}
-                />
-              </FormControl>
-              <FormControlLabel
-                control={<Checkbox value="remember" sx={{ color: "white" }} />}
-                label="Remember me"
-                sx={{ color: "white" }}
-              />
-              <Button type="submit" fullWidth variant="contained">
-                Sign in
-              </Button>
-              <Button
-                onClick={() => {
-                  localStorage.setItem("isLoggedIn", "true");
-                  onLogin();
-                  navigate("/mock-interview");
+        <Card variant="outlined">
+          <Typography component="h1" variant="h4" sx={{ textAlign: "center" }}>
+            Sign in
+          </Typography>
+          <Box component="form" onSubmit={handleSubmit} noValidate>
+            <FormControl fullWidth>
+              <FormLabel htmlFor="email" sx={{ color: "#ffffff" }}>
+                Email
+              </FormLabel>
+              <TextField
+                error={emailError}
+                helperText={emailErrorMessage}
+                id="email"
+                type="email"
+                name="email"
+                required
+                fullWidth
+                variant="outlined"
+                sx={{
+                  input: { color: "white" },
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": { borderColor: "white" },
+                    "&:hover fieldset": { borderColor: "#66a3ff" },
+                  },
                 }}
-                sx={{ textTransform: "none", marginTop: 2, color: "#bbbbbb" }}
-              >
-                Skip
-              </Button>
-            </Box>
-          </Card>
-        )}
+              />
+            </FormControl>
+            <FormControl fullWidth sx={{ mt: 2 }}>
+              <FormLabel htmlFor="password" sx={{ color: "#ffffff" }}>
+                Password
+              </FormLabel>
+              <TextField
+                error={passwordError}
+                helperText={passwordErrorMessage}
+                name="password"
+                type="password"
+                id="password"
+                required
+                fullWidth
+                variant="outlined"
+                sx={{
+                  input: { color: "white" },
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": { borderColor: "white" },
+                    "&:hover fieldset": { borderColor: "#66a3ff" },
+                  },
+                }}
+              />
+            </FormControl>
+            <FormControlLabel
+              control={<Checkbox value="remember" sx={{ color: "white" }} />}
+              label="Remember me"
+              sx={{ color: "white", mt: 2 }}
+            />
+            <Button type="submit" fullWidth variant="contained" sx={{ mt: 2 }}>
+              Sign in
+            </Button>
+            <Button
+              onClick={() => {
+                localStorage.setItem("isLoggedIn", "true");
+                onLogin();
+                navigate("/mock-interview");
+              }}
+              sx={{ textTransform: "none", marginTop: 2, color: "#bbbbbb" }}
+            >
+              Skip
+            </Button>
+          </Box>
+        </Card>
       </SignInContainer>
     </>
   );

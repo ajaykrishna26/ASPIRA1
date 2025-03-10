@@ -9,9 +9,9 @@ const Navbar = ({ setIsLoggedIn }) => {
   const pageUrl = window.location.href; // Get the current page URL
 
   const handleLogout = () => {
-    setIsLoggedIn(false);
-    localStorage.removeItem("isLoggedIn");
-    navigate("/");
+    // setIsLoggedIn(false);
+    // localStorage.removeItem("isLoggedIn");
+    navigate("/signin");
   };
 
   // Function for general sharing (Web Share API)
@@ -91,7 +91,7 @@ const Navbar = ({ setIsLoggedIn }) => {
                 "&:hover": { backgroundColor: "gray" },
               }}
             >
-              Logout
+              Sign In
             </Button>
           </Box>
         </Toolbar>
