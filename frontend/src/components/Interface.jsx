@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Button, Container, Typography, TextField, Card, Box, Avatar } from "@mui/material";
+import { Button, Container, Typography, TextField, Card, Box } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { styled } from "@mui/material/styles";
 
@@ -8,9 +8,8 @@ const Background = styled(Box)({
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  background: `url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRIpYb_mEEhExarwW2UmYGrCXYxFzfJZHnoGA&s') no-repeat center center/cover`,
+  background: `url('https://careercenter.ucdavis.edu/sites/g/files/dgvnsk15461/files/styles/sf_landscape_16x9/public/media/images/CC%E2%80%93Horizontal-Marketing-Block-2.jpg?h=0419be36&itok=Q4eP0cAr') no-repeat center center/cover`,
 });
-
 
 const aiQuestions = [
   "What inspired you to choose this career?",
@@ -36,7 +35,7 @@ const Interface = () => {
 
   useEffect(() => {
     if (answer) {
-      setAiResponse(""); // Reset response before updating
+      setAiResponse("");
       setTimeout(() => {
         setAiResponse(aiResponses[Math.floor(Math.random() * aiResponses.length)]);
       }, 1500);
@@ -64,108 +63,89 @@ const Interface = () => {
 
   return (
     <Background>
-    <Box
-      sx={{
-        width: "100vw",
-        height: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 2,
-        // background: "linear-gradient(135deg, #1e3c72, #2a5298)",
-        // backgroundSize: "cover",
-      }}
-    >
-      <Container maxWidth="sm">
-        <Card
-          sx={{
-            p: 4,
-            borderRadius: 3,
-            boxShadow: 3,
-            textAlign: "center",
-            backgroundColor: "rgba(255, 255, 255, 0.1)",
-            backdropFilter: "blur(10px)",
-            color: "white",
-          }}
-        >
-          {/* AI Interviewer Avatar */}
-          <Box sx={{ textAlign: "center", mb: 2 }}>
-            <Avatar 
-              sx={{ width: 80, height: 80, mx: "auto" }}
-              src="/assets/ai-avatar.png"
-              alt="AI Avatar"
-            />
-            <Typography variant="h6" sx={{ mt: 1, fontWeight: "bold" }}>
-              AI Interviewer
-            </Typography>
-          </Box>
-
-          {/* AI Question */}
-          <Typography variant="h5" sx={{ fontWeight: "bold", mb: 2 }}>
-            AI: {aiQuestions[questionIndex]}
-          </Typography>
-
-          {/* User Response Input */}
-          <TextField
-            fullWidth
-            multiline
-            rows={3}
-            value={answer}
-            onChange={(e) => setAnswer(e.target.value)}
-            placeholder="Your response..."
+      <Box sx={{ width: "100vw", height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 2 }}>
+        <Container maxWidth="sm">
+          <Card
             sx={{
-              mb: 2,
-              input: { color: "white" },
-              "& .MuiOutlinedInput-root": {
-                "& fieldset": { borderColor: "white" },
-                "&:hover fieldset": { borderColor: "#66a3ff" },
-              },
+              p: 4,
+              borderRadius: 3,
+              boxShadow: 3,
+              textAlign: "center",
+              backgroundColor: "rgba(255, 255, 255, 0.1)",
+              backdropFilter: "blur(10px)",
+              color: "white",
             }}
-          />
+          >
+            {/* AI Interviewer Video */}
+            <Box sx={{ textAlign: "center", mb: 2 }}>
+            <video
+  width="100%"
+  height="auto"
+  autoPlay
+  loop
+  muted
+  style={{ borderRadius: "10px", maxHeight: "200px" }}
+>
+  <source src="https://v.ftcdn.net/04/33/10/42/700_F_433104217_W6g0MGty3HdfcdQZURQV0AtjyiO3m1w8_ST.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
 
-          {/* AI Response (Appears after user types) */}
-          {aiResponse && (
-            <Typography
-              variant="body1"
+              <Typography variant="h6" sx={{ mt: 1, fontWeight: "bold" }}>
+                AI Interviewer
+              </Typography>
+            </Box>
+
+            {/* AI Question */}
+            <Typography variant="h5" sx={{ fontWeight: "bold", mb: 2 }}>
+              AI: {aiQuestions[questionIndex]}
+            </Typography>
+
+            {/* User Response Input */}
+            <TextField
+              fullWidth
+              multiline
+              rows={3}
+              value={answer}
+              onChange={(e) => setAnswer(e.target.value)}
+              placeholder="Your response..."
               sx={{
                 mb: 2,
-                fontWeight: "bold",
-                color: "lightgreen",
-                transition: "opacity 1s ease-in-out",
+                input: { color: "white" },
+                "& .MuiOutlinedInput-root": {
+                  "& fieldset": { borderColor: "white" },
+                  "&:hover fieldset": { borderColor: "#66a3ff" },
+                },
               }}
-            >
-              AI: {aiResponse}
-            </Typography>
-          )}
+            />
 
-          {/* Navigation Buttons */}
-          <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
-            <Button
-              variant="outlined"
-              onClick={handlePreviousQuestion}
-              disabled={questionIndex === 0}
-              sx={{
-                borderColor: "#00c6ff",
-                color: "#00c6ff",
-                "&:hover": { backgroundColor: "#00c6ff", color: "white" },
-              }}
-            >
-              Back
-            </Button>
-            <Button
-              variant="contained"
-              onClick={handleNextQuestion}
-              sx={{
-                backgroundColor: "#00c6ff",
-                "&:hover": { backgroundColor: "#0072ff" },
-              }}
-            >
-              {questionIndex < aiQuestions.length - 1 ? "Next Question" : "Finish"}
-            </Button>
-          </Box>
-        </Card>
-      </Container>
-    </Box>
+            {/* AI Response (Appears after user types) */}
+            {aiResponse && (
+              <Typography variant="body1" sx={{ mb: 2, fontWeight: "bold", color: "lightgreen", transition: "opacity 1s ease-in-out" }}>
+                AI: {aiResponse}
+              </Typography>
+            )}
+
+            {/* Navigation Buttons */}
+            <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
+              <Button
+                variant="outlined"
+                onClick={handlePreviousQuestion}
+                disabled={questionIndex === 0}
+                sx={{ borderColor: "#00c6ff", color: "#00c6ff", "&:hover": { backgroundColor: "#00c6ff", color: "white" } }}
+              >
+                Back
+              </Button>
+              <Button
+                variant="contained"
+                onClick={handleNextQuestion}
+                sx={{ backgroundColor: "#00c6ff", "&:hover": { backgroundColor: "#0072ff" } }}
+              >
+                {questionIndex < aiQuestions.length - 1 ? "Next Question" : "Finish"}
+              </Button>
+            </Box>
+          </Card>
+        </Container>
+      </Box>
     </Background>
   );
 };

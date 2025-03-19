@@ -9,7 +9,7 @@ const Background = styled(Box)({
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  background: `url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRIpYb_mEEhExarwW2UmYGrCXYxFzfJZHnoGA&s') no-repeat center center/cover`,
+  background: `url('https://careercenter.ucdavis.edu/sites/g/files/dgvnsk15461/files/styles/sf_landscape_16x9/public/media/images/CC%E2%80%93Horizontal-Marketing-Block-2.jpg?h=0419be36&itok=Q4eP0cAr') no-repeat center center/cover`,
 });
 
 // Sample Interview Questions
