@@ -36,20 +36,20 @@ const Welcome = () => {
           Explore AI-powered mock interviews and enhance your skills.
         </Typography>
         <Button
-          variant="contained"
-          sx={{
-            backgroundColor: "#0077FF",
-            color: "white",
-            fontSize: "16px",
-            padding: "12px 24px",
-            borderRadius: "10px",
-            transition: "0.3s",
-            "&:hover": { backgroundColor: "#0057CC", transform: "scale(1.05)" },
-          }}
-          onClick={() => navigate("/mock-interview")}
-        >
-          Get Started
-        </Button>
+  variant="contained"
+  sx={{
+    backgroundColor: "#0077FF",
+    color: "white",
+    fontSize: "16px",
+    padding: "12px 24px",
+    borderRadius: "10px",
+    transition: "0.3s",
+    "&:hover": { backgroundColor: "#0057CC", transform: "scale(1.05)" },
+  }}
+  onClick={() => navigate("/signin")} // Changed from "/mock-interview"
+>
+  Get Started
+</Button>
       </StyledCard>
     </Background>
   );

@@ -1,53 +1,166 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button, Container, Typography, TextField, Card, Box } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { styled } from "@mui/material/styles";
 
+// ========== Question Banks ==========
+const getBehavioralQuestions = () => [
+  "Tell me about a time you faced a difficult challenge at work.",
+  "Describe a situation where you had to work with a difficult team member.",
+  "Give an example of how you handled a mistake you made at work."
+];
+
+const getTechnicalQuestions = () => [
+  "Explain your approach to solving complex technical problems.",
+  "How do you stay updated with the latest technologies in your field?",
+  "Describe a technical project you're particularly proud of."
+];
+
+const getSituationalQuestions = () => [
+  "What would you do if you disagreed with your manager's decision?",
+  "How would you handle a tight deadline with multiple priorities?",
+  "Describe how you would onboard a new team member."
+];
+
+// ========== AI Response Generators ==========
+const getEncouragingResponses = () => [
+  "That's an excellent point! Could you elaborate further?",
+  "Great answer! What other factors did you consider?",
+  "Interesting perspective! How did this experience shape you?"
+];
+
+const getFollowUpResponses = () => [
+  "What was the most challenging part of that situation?",
+  "How would you approach this differently today?",
+  "What key lessons did you learn from this experience?"
+];
+
+// ========== Speech Functions ==========
+const initializeSpeech = () => {
+  const synth = window.speechSynthesis;
+  let recognition = null;
+
+  if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+    recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+  }
+
+  return { synth, recognition };
+};
+
+const speakQuestion = (synth, question) => {
+  if (synth.speaking) {
+    synth.cancel();
+  }
+  
+  const utterance = new SpeechSynthesisUtterance(question);
+  utterance.rate = 1.0;
+  utterance.pitch = 1.0;
+  synth.speak(utterance);
+};
+
+// ========== Styled Components ==========
 const Background = styled(Box)({
-  height: "100vh",
+  position: "fixed",
+  top: 0,
+  left: 0,
+  width: "100%",
+  height: "100%",
+  backgroundImage: `url('https://careercenter.ucdavis.edu/sites/g/files/dgvnsk15461/files/styles/sf_landscape_16x9/public/media/images/CC%E2%80%93Horizontal-Marketing-Block-2.jpg?h=0419be36&itok=Q4eP0cAr')`,
+  backgroundSize: "cover",
+  backgroundPosition: "center",
+  zIndex: -1,
+  "&::before": {
+    content: '""',
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    zIndex: 1,
+  },
+});
+
+const ContentWrapper = styled(Box)({
+  position: "relative",
+  zIndex: 2,
+  minHeight: "100vh",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  background: `url('https://careercenter.ucdavis.edu/sites/g/files/dgvnsk15461/files/styles/sf_landscape_16x9/public/media/images/CC%E2%80%93Horizontal-Marketing-Block-2.jpg?h=0419be36&itok=Q4eP0cAr') no-repeat center center/cover`,
+  padding: "20px",
+  overflow: "auto",
 });
 
-const aiQuestions = [
-  "What inspired you to choose this career?",
-  "How do you handle workplace conflicts?",
-  "Can you describe a challenging project you worked on?",
-  "What are your strategies for time management?",
-  "How do you deal with stress and pressure?",
-];
-
-const aiResponses = [
-  "That’s an interesting perspective! Can you elaborate?",
-  "Great answer! What would you do differently next time?",
-  "That’s a strong approach. How did it impact your work?",
-  "Nice! Could you give a real-life example?",
-  "Very insightful! How do you plan to improve further?",
-];
-
+// ========== Main Component ==========
 const Interface = () => {
   const navigate = useNavigate();
   const [questionIndex, setQuestionIndex] = useState(0);
   const [answer, setAnswer] = useState("");
   const [aiResponse, setAiResponse] = useState("");
+  const [isListening, setIsListening] = useState(false);
+  const [isInterviewStarted, setIsInterviewStarted] = useState(false);
+  const [questionBank, setQuestionBank] = useState([]);
+  const synthRef = useRef(null);
+  const recognitionRef = useRef(null);
 
+  // Initialize speech and question bank
+  useEffect(() => {
+    const { synth, recognition } = initializeSpeech();
+    synthRef.current = synth;
+    recognitionRef.current = recognition;
+
+    if (recognition) {
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        setAnswer(prev => prev + ' ' + transcript);
+        setIsListening(false);
+      };
+
+      recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+    } else {
+      console.warn("Speech recognition is not supported in this browser.");
+    }
+
+    // Default to behavioral questions
+    setQuestionBank(getBehavioralQuestions());
+  }, []);
+
+  // Speak question when it changes
+  useEffect(() => {
+    if (isInterviewStarted && questionBank.length > 0) {
+      speakQuestion(synthRef.current, questionBank[questionIndex]);
+    }
+  }, [questionIndex, isInterviewStarted, questionBank]);
+
+  // Generate AI response
   useEffect(() => {
     if (answer) {
       setAiResponse("");
       setTimeout(() => {
-        setAiResponse(aiResponses[Math.floor(Math.random() * aiResponses.length)]);
+        const responses = [...getEncouragingResponses(), ...getFollowUpResponses()];
+        setAiResponse(responses[Math.floor(Math.random() * responses.length)]);
       }, 1500);
     }
   }, [answer]);
 
+  // ========== Question Navigation ==========
   const handleNextQuestion = () => {
-    if (questionIndex < aiQuestions.length - 1) {
-      setQuestionIndex(questionIndex + 1);
+    if (questionIndex < questionBank.length - 1) {
+      setQuestionIndex(prev => prev + 1);
       setAnswer("");
       setAiResponse("");
     } else {
+      synthRef.current.cancel();
       alert("AI Interview Completed! Redirecting...");
       navigate("/");
     }
@@ -55,98 +168,211 @@ const Interface = () => {
 
   const handlePreviousQuestion = () => {
     if (questionIndex > 0) {
-      setQuestionIndex(questionIndex - 1);
+      setQuestionIndex(prev => prev - 1);
       setAnswer("");
       setAiResponse("");
     }
   };
 
+  // ========== Question Bank Selection ==========
+  const selectQuestionBank = (type) => {
+    switch(type) {
+      case 'technical':
+        setQuestionBank(getTechnicalQuestions());
+        break;
+      case 'situational':
+        setQuestionBank(getSituationalQuestions());
+        break;
+      default:
+        setQuestionBank(getBehavioralQuestions());
+    }
+    setQuestionIndex(0);
+    setAnswer("");
+    setAiResponse("");
+  };
+
+  // ========== Voice Control ==========
+  const toggleVoiceInput = () => {
+    if (!recognitionRef.current) {
+      alert("Voice input is not supported in your browser");
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop();
+    } else {
+      recognitionRef.current.start();
+    }
+    setIsListening(!isListening);
+  };
+
+  const replayQuestion = () => {
+    speakQuestion(synthRef.current, questionBank[questionIndex]);
+  };
+
   return (
-    <Background>
-      <Box sx={{ width: "100vw", height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 2 }}>
+    <>
+      <Background />
+      <ContentWrapper>
         <Container maxWidth="sm">
-          <Card
-            sx={{
-              p: 4,
-              borderRadius: 3,
-              boxShadow: 3,
-              textAlign: "center",
-              backgroundColor: "rgba(255, 255, 255, 0.1)",
-              backdropFilter: "blur(10px)",
-              color: "white",
-            }}
-          >
-            {/* AI Interviewer Video */}
-            <Box sx={{ textAlign: "center", mb: 2 }}>
-            <video
-  width="100%"
-  height="auto"
-  autoPlay
-  loop
-  muted
-  style={{ borderRadius: "10px", maxHeight: "200px" }}
->
-  <source src="https://v.ftcdn.net/04/33/10/42/700_F_433104217_W6g0MGty3HdfcdQZURQV0AtjyiO3m1w8_ST.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
+          <Card sx={{
+            p: 4,
+            borderRadius: 3,
+            boxShadow: 3,
+            textAlign: "center",
+            backgroundColor: "rgba(255, 255, 255, 0.1)",
+            backdropFilter: "blur(10px)",
+            color: "white",
+          }}>
+            {!isInterviewStarted ? (
+              <>
+                <Box sx={{ mb: 3 }}>
+                  <img
+                    src="https://images.cnbctv18.com/uploads/2023/05/artificial-intelligence-ai.jpeg"
+                    alt="AI Interview"
+                    style={{
+                      width: "100%",
+                      borderRadius: "10px",
+                      maxHeight: "200px",
+                      objectFit: "cover",
+                    }}
+                  />
+                </Box>
 
-              <Typography variant="h6" sx={{ mt: 1, fontWeight: "bold" }}>
-                AI Interviewer
-              </Typography>
-            </Box>
+                <Typography variant="h5" sx={{ mb: 3 }}>
+                  Select Question Type
+                </Typography>
 
-            {/* AI Question */}
-            <Typography variant="h5" sx={{ fontWeight: "bold", mb: 2 }}>
-              AI: {aiQuestions[questionIndex]}
-            </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 3 }}>
+                  <Button 
+                    variant="outlined" 
+                    onClick={() => selectQuestionBank('behavioral')}
+                    sx={{ color: 'white', borderColor: 'white' }}
+                  >
+                    Behavioral Questions
+                  </Button>
+                  <Button 
+                    variant="outlined" 
+                    onClick={() => selectQuestionBank('technical')}
+                    sx={{ color: 'white', borderColor: 'white' }}
+                  >
+                    Technical Questions
+                  </Button>
+                  <Button 
+                    variant="outlined" 
+                    onClick={() => selectQuestionBank('situational')}
+                    sx={{ color: 'white', borderColor: 'white' }}
+                  >
+                    Situational Questions
+                  </Button>
+                </Box>
 
-            {/* User Response Input */}
-            <TextField
-              fullWidth
-              multiline
-              rows={3}
-              value={answer}
-              onChange={(e) => setAnswer(e.target.value)}
-              placeholder="Your response..."
-              sx={{
-                mb: 2,
-                input: { color: "white" },
-                "& .MuiOutlinedInput-root": {
-                  "& fieldset": { borderColor: "white" },
-                  "&:hover fieldset": { borderColor: "#66a3ff" },
-                },
-              }}
-            />
+                <Button
+                  variant="contained"
+                  onClick={() => setIsInterviewStarted(true)}
+                  sx={{
+                    backgroundColor: "#00c6ff",
+                    "&:hover": { backgroundColor: "#0072ff" },
+                    fontSize: '1.1rem',
+                    padding: '10px 24px'
+                  }}
+                >
+                  Start Interview
+                </Button>
+              </>
+            ) : (
+              <>
+                <Box sx={{ textAlign: "center", mb: 2 }}>
+                  <video
+                    width="100%"
+                    height="auto"
+                    autoPlay
+                    loop
+                    muted
+                    style={{ borderRadius: "10px", maxHeight: "200px" }}
+                  >
+                    <source src="https://v.ftcdn.net/04/33/10/42/700_F_433104217_W6g0MGty3HdfcdQZURQV0AtjyiO3m1w8_ST.mp4" type="video/mp4" />
+                  </video>
+                  <Typography variant="h6" sx={{ mt: 1, fontWeight: "bold" }}>
+                    AI Interviewer
+                  </Typography>
+                </Box>
 
-            {/* AI Response (Appears after user types) */}
-            {aiResponse && (
-              <Typography variant="body1" sx={{ mb: 2, fontWeight: "bold", color: "lightgreen", transition: "opacity 1s ease-in-out" }}>
-                AI: {aiResponse}
-              </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                  <Typography variant="h5" sx={{ fontWeight: "bold" }}>
+                    AI: {questionBank[questionIndex]}
+                  </Typography>
+                  <Button
+                    variant="outlined"
+                    onClick={replayQuestion}
+                    sx={{
+                      color: '#00c6ff',
+                      borderColor: '#00c6ff',
+                      '&:hover': { backgroundColor: '#00c6ff20' }
+                    }}
+                  >
+                    Replay
+                  </Button>
+                </Box>
+
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={3}
+                  value={answer}
+                  onChange={(e) => setAnswer(e.target.value)}
+                  placeholder="Your response..."
+                  sx={{
+                    mb: 2,
+                    input: { color: "white" },
+                    "& .MuiOutlinedInput-root": {
+                      "& fieldset": { borderColor: "white" },
+                      "&:hover fieldset": { borderColor: "#66a3ff" },
+                    },
+                  }}
+                />
+
+                <Button
+                  variant="contained"
+                  onClick={toggleVoiceInput}
+                  sx={{
+                    mb: 2,
+                    backgroundColor: isListening ? "#ff3b2f" : "#ff6f61",
+                    '&:hover': { backgroundColor: isListening ? "#ff2b1f" : "#ff5f51" }
+                  }}
+                >
+                  {isListening ? "Stop Recording" : "Start Voice Input"}
+                </Button>
+
+                {aiResponse && (
+                  <Typography variant="body1" sx={{ mb: 2, fontWeight: "bold", color: "lightgreen" }}>
+                    AI: {aiResponse}
+                  </Typography>
+                )}
+
+                <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
+                  <Button
+                    variant="outlined"
+                    onClick={handlePreviousQuestion}
+                    disabled={questionIndex === 0}
+                    sx={{ borderColor: "#00c6ff", color: "#00c6ff", "&:hover": { backgroundColor: "#00c6ff", color: "white" } }}
+                  >
+                    Back
+                  </Button>
+                  <Button
+                    variant="contained"
+                    onClick={handleNextQuestion}
+                    sx={{ backgroundColor: "#00c6ff", "&:hover": { backgroundColor: "#0072ff" } }}
+                  >
+                    {questionIndex < questionBank.length - 1 ? "Next Question" : "Finish"}
+                  </Button>
+                </Box>
+              </>
             )}
-
-            {/* Navigation Buttons */}
-            <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
-              <Button
-                variant="outlined"
-                onClick={handlePreviousQuestion}
-                disabled={questionIndex === 0}
-                sx={{ borderColor: "#00c6ff", color: "#00c6ff", "&:hover": { backgroundColor: "#00c6ff", color: "white" } }}
-              >
-                Back
-              </Button>
-              <Button
-                variant="contained"
-                onClick={handleNextQuestion}
-                sx={{ backgroundColor: "#00c6ff", "&:hover": { backgroundColor: "#0072ff" } }}
-              >
-                {questionIndex < aiQuestions.length - 1 ? "Next Question" : "Finish"}
-              </Button>
-            </Box>
           </Card>
         </Container>
-      </Box>
-    </Background>
+      </ContentWrapper>
+    </>
   );
 };
 

@@ -1,22 +1,40 @@
 import * as React from "react";
 import {
-
-  
   Box,
   Button,
-  Checkbox,
   CssBaseline,
-  FormControlLabel,
   FormControl,
   FormLabel,
   TextField,
   Typography,
   Card as MuiCard,
   Stack,
-  CardContent,
+  Snackbar,
+  Alert,
+  CircularProgress,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
+import { 
+  getAuth, 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword 
+} from "firebase/auth";
+import { initializeApp } from "firebase/app";
+
+// Firebase configuration - replace with your actual values
+const firebaseConfig = {
+  apiKey: "AIzaSyABC123XYZ456DEF789GHI", // Replace with your API key
+  authDomain: "your-project.firebaseapp.com",
+  projectId: "your-project-id",
+  storageBucket: "your-project.appspot.com",
+  messagingSenderId: "123456789012",
+  appId: "1:123456789012:web:abc123def456"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: "flex",
@@ -44,78 +62,146 @@ const SignInContainer = styled(Stack)(({ theme }) => ({
   alignItems: "center",
   justifyContent: "center",
   padding: theme.spacing(2),
-  background: `url('/ai_background.jpg') no-repeat center center/cover`,
+  background: `url('https://careercenter.ucdavis.edu/sites/g/files/dgvnsk15461/files/styles/sf_landscape_16x9/public/media/images/CC%E2%80%93Horizontal-Marketing-Block-2.jpg?h=0419be36&itok=Q4eP0cAr') no-repeat center center/cover`,
 }));
 
-export default function SignIn({ onLogin }) {
+export default function SignIn({ setIsAuthenticated }) {
   const navigate = useNavigate();
-  const [emailError, setEmailError] = React.useState(false);
-  const [emailErrorMessage, setEmailErrorMessage] = React.useState("");
-  const [passwordError, setPasswordError] = React.useState(false);
-  const [passwordErrorMessage, setPasswordErrorMessage] = React.useState("");
+  const [isSignUp, setIsSignUp] = React.useState(false);
+  const [formData, setFormData] = React.useState({
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+  const [errors, setErrors] = React.useState({});
+  const [authError, setAuthError] = React.useState(null);
+  const [isLoading, setIsLoading] = React.useState(false);
 
-  // Redirect if already logged in
-  // React.useEffect(() => {
-  //   if (localStorage.getItem("isLoggedIn") === "true") {
-  //     navigate("/mock-interview");
-  //   }
-  // }, [navigate]);
-
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    if (!validateInputs()) return;
-    localStorage.setItem("isLoggedIn", "true");
-    onLogin();
-    setTimeout(() => navigate("/mock-interview"), 500);
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (errors[e.target.name]) {
+      setErrors({ ...errors, [e.target.name]: "" });
+    }
   };
 
   const validateInputs = () => {
-    const email = document.getElementById("email");
-    const password = document.getElementById("password");
     let isValid = true;
+    let newErrors = {};
 
-    if (!email.value || !/\S+@\S+\.\S+/.test(email.value)) {
-      setEmailError(true);
-      setEmailErrorMessage("Enter a valid email.");
+    if (isSignUp && !formData.username.trim()) {
+      newErrors.username = "Username is required.";
       isValid = false;
-    } else {
-      setEmailError(false);
-      setEmailErrorMessage("");
     }
 
-    if (!password.value || password.value.length < 6) {
-      setPasswordError(true);
-      setPasswordErrorMessage("Password must be at least 6 characters.");
+    if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = "Enter a valid email address.";
       isValid = false;
-    } else {
-      setPasswordError(false);
-      setPasswordErrorMessage("");
     }
 
+    if (!formData.password || formData.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters.";
+      isValid = false;
+    }
+
+    if (isSignUp && formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match.";
+      isValid = false;
+    }
+
+    setErrors(newErrors);
     return isValid;
   };
 
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setAuthError(null);
+    
+    if (!validateInputs()) return;
+
+    setIsLoading(true);
+    
+    try {
+      if (isSignUp) {
+        await createUserWithEmailAndPassword(
+          auth,
+          formData.email,
+          formData.password
+        );
+        localStorage.setItem("username", formData.username);
+        localStorage.setItem("email", formData.email);
+      } else {
+        await signInWithEmailAndPassword(
+          auth,
+          formData.email,
+          formData.password
+        );
+      }
+      
+      localStorage.setItem("isLoggedIn", "true");
+      setIsAuthenticated(true);
+      navigate("/u");
+    } catch (error) {
+      console.error("Authentication error:", error);
+      setAuthError(error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGuestAccess = () => {
+    localStorage.setItem("username", "Guest");
+    localStorage.setItem("isLoggedIn", "true");
+    setIsAuthenticated(true);
+    navigate("/home");
+  };
+
   return (
-    
-    
     <>
       <CssBaseline />
       <SignInContainer>
         <Card variant="outlined">
           <Typography component="h1" variant="h4" sx={{ textAlign: "center" }}>
-            Sign in
+            {isSignUp ? "Create an Account" : "Sign In"}
           </Typography>
           <Box component="form" onSubmit={handleSubmit} noValidate>
-            <FormControl fullWidth>
+            {isSignUp && (
+              <FormControl fullWidth sx={{ mb: 2 }}>
+                <FormLabel htmlFor="username" sx={{ color: "#ffffff" }}>
+                  Username
+                </FormLabel>
+                <TextField
+                  error={!!errors.username}
+                  helperText={errors.username}
+                  name="username"
+                  id="username"
+                  value={formData.username}
+                  onChange={handleChange}
+                  fullWidth
+                  variant="outlined"
+                  sx={{
+                    input: { color: "white" },
+                    "& .MuiOutlinedInput-root": {
+                      "& fieldset": { borderColor: "white" },
+                      "&:hover fieldset": { borderColor: "#66a3ff" },
+                    },
+                  }}
+                />
+              </FormControl>
+            )}
+            
+            <FormControl fullWidth sx={{ mb: 2 }}>
               <FormLabel htmlFor="email" sx={{ color: "#ffffff" }}>
                 Email
               </FormLabel>
               <TextField
-                error={emailError}
-                helperText={emailErrorMessage}
+                error={!!errors.email}
+                helperText={errors.email}
+                name="email"
                 id="email"
                 type="email"
-                name="email"
+                value={formData.email}
+                onChange={handleChange}
                 required
                 fullWidth
                 variant="outlined"
@@ -128,16 +214,19 @@ export default function SignIn({ onLogin }) {
                 }}
               />
             </FormControl>
-            <FormControl fullWidth sx={{ mt: 2 }}>
+            
+            <FormControl fullWidth sx={{ mb: 2 }}>
               <FormLabel htmlFor="password" sx={{ color: "#ffffff" }}>
                 Password
               </FormLabel>
               <TextField
-                error={passwordError}
-                helperText={passwordErrorMessage}
+                error={!!errors.password}
+                helperText={errors.password}
                 name="password"
-                type="password"
                 id="password"
+                type="password"
+                value={formData.password}
+                onChange={handleChange}
                 required
                 fullWidth
                 variant="outlined"
@@ -150,27 +239,106 @@ export default function SignIn({ onLogin }) {
                 }}
               />
             </FormControl>
-            <FormControlLabel
-              control={<Checkbox value="remember" sx={{ color: "white" }} />}
-              label="Remember me"
-              sx={{ color: "white", mt: 2 }}
-            />
-            <Button type="submit" fullWidth variant="contained" sx={{ mt: 2 }}>
-              Sign in
-            </Button>
-            <Button
-              onClick={() => {
-                localStorage.setItem("isLoggedIn", "true");
-                onLogin();
-                navigate("/mock-interview");
+            
+            {isSignUp && (
+              <FormControl fullWidth sx={{ mb: 2 }}>
+                <FormLabel htmlFor="confirmPassword" sx={{ color: "#ffffff" }}>
+                  Confirm Password
+                </FormLabel>
+                <TextField
+                  error={!!errors.confirmPassword}
+                  helperText={errors.confirmPassword}
+                  name="confirmPassword"
+                  id="confirmPassword"
+                  type="password"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  required
+                  fullWidth
+                  variant="outlined"
+                  sx={{
+                    input: { color: "white" },
+                    "& .MuiOutlinedInput-root": {
+                      "& fieldset": { borderColor: "white" },
+                      "&:hover fieldset": { borderColor: "#66a3ff" },
+                    },
+                  }}
+                />
+              </FormControl>
+            )}
+            
+            <Button 
+              type="submit" 
+              fullWidth 
+              variant="contained" 
+              disabled={isLoading}
+              sx={{ 
+                mt: 2, 
+                mb: 1,
+                backgroundColor: "#2196f3", 
+                '&:hover': { 
+                  backgroundColor: "#1976d2" 
+                },
+                height: "48px"
               }}
-              sx={{ textTransform: "none", marginTop: 2, color: "#bbbbbb" }}
             >
-              Skip
+              {isLoading ? (
+                <CircularProgress size={24} color="inherit" />
+              ) : isSignUp ? (
+                "Create Account"
+              ) : (
+                "Sign In"
+              )}
+            </Button>
+
+            <Button 
+              onClick={() => setIsSignUp(!isSignUp)} 
+              fullWidth 
+              sx={{ 
+                color: "#90caf9",
+                textTransform: 'none'
+              }}
+            >
+              {isSignUp ? (
+                "Already have an account? Sign In"
+              ) : (
+                "Don't have an account? Create one"
+              )}
+            </Button>
+            
+            <Button 
+              onClick={handleGuestAccess}
+              fullWidth 
+              variant="outlined"
+              sx={{ 
+                mt: 1,
+                color: "#90caf9",
+                borderColor: "#90caf9",
+                '&:hover': {
+                  borderColor: "#42a5f5",
+                  backgroundColor: "rgba(144, 202, 249, 0.08)"
+                }
+              }}
+            >
+              Continue as Guest
             </Button>
           </Box>
-          
         </Card>
+        
+        <Snackbar
+          open={!!authError}
+          autoHideDuration={6000}
+          onClose={() => setAuthError(null)}
+          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        >
+          <Alert 
+            onClose={() => setAuthError(null)} 
+            severity="error" 
+            sx={{ width: '100%' }}
+          >
+            {authError}
+          </Alert>
+        </Snackbar>
       </SignInContainer>
     </>
   );

@@ -1,103 +1,175 @@
-import { AppBar, Box, Button, Toolbar, Typography } from "@mui/material";
-import React from "react";
-import { useNavigate } from "react-router-dom";
-import ShareIcon from "@mui/icons-material/Share";
-import WhatsAppIcon from "@mui/icons-material/WhatsApp";
+import React, { useState } from 'react';
+import { 
+  AppBar, 
+  Toolbar, 
+  Typography, 
+  Button, 
+  Box, 
+  IconButton,
+  Menu,
+  MenuItem,
+  useMediaQuery,
+  useTheme
+} from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import {
+  EmojiEvents,
+  Home,
+  ExitToApp,
+  Menu as MenuIcon,
+  Share // Import the Share icon
+} from '@mui/icons-material';
 
-const Navbar = ({ setIsLoggedIn }) => {
+const Navbar = ({ isAuthenticated, setIsAuthenticated }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const navigate = useNavigate();
-  const pageUrl = window.location.href; // Get the current page URL
+  const [anchorEl, setAnchorEl] = useState(null);
 
-  const handleLogout = () => {
-    // setIsLoggedIn(false);
-    // localStorage.removeItem("isLoggedIn");
-    navigate("/signin");
+  const handleMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
   };
 
-  // Function for general sharing (Web Share API)
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleNavigation = (path) => {
+    navigate(path);
+    handleMenuClose();
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('username');
+    setIsAuthenticated(false);
+    navigate('/signin');
+    handleMenuClose();
+  };
+
   const handleShare = () => {
     if (navigator.share) {
-      navigator
-        .share({
-          title: "Check out ASPIRA!",
-          text: "Explore movie reviews on ASPIRA",
-          url: pageUrl,
-        })
-        .catch((error) => console.log("Error sharing:", error));
+      navigator.share({
+        title: 'ASPIRA',
+        text: 'Check out this amazing platform!',
+        url: window.location.href,
+      })
+      .then(() => console.log('Successful share'))
+      .catch((error) => console.log('Error sharing', error));
     } else {
-      alert("Sharing is not supported on this browser.");
+      // Fallback for browsers that don't support the Web Share API
+      navigator.clipboard.writeText(window.location.href)
+        .then(() => alert('Link copied to clipboard!'))
+        .catch(() => alert('Failed to copy link to clipboard.'));
     }
   };
 
-  // WhatsApp Share Handler
-  const handleWhatsAppShare = () => {
-    const message = `Check out ASPIRA! Movie reviews and more: ${pageUrl}`;
-    const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, "_blank");
-  };
-
   return (
-    <Box sx={{ flexGrow: 1 }}>
-      <AppBar
-        position="fixed"
-        sx={{ backgroundColor: "lightblue", width: "100vw", boxShadow: "none" }}
-      >
-        <Toolbar sx={{ justifyContent: "space-between", px: 3 }}>
-          <Typography
-            variant="h3"
-            sx={{
-              flexGrow: 1,
-              textAlign: "center",
-              fontWeight: "bold",
-              fontFamily: "Algerian",
-              color: "darkblue",
-            }}
-          >
-            ASPIRA
-          </Typography>
-          
-          <Box>
-            <Button
-              sx={{
-                color: "black",
-                backgroundColor: "green",
-                mr: 1,
-                "&:hover": { backgroundColor: "darkgreen" },
-              }}
-              onClick={handleWhatsAppShare}
-              startIcon={<WhatsAppIcon />}
-            >
-              WhatsApp
-            </Button>
+    <AppBar 
+      position="fixed" // Changed from 'sticky' to 'fixed'
+      sx={{ 
+        background: 'linear-gradient(45deg, #1a237e 30%, #0d47a1 90%)',
+        boxShadow: '0 3px 5px 2px rgba(0, 0, 0, .3)',
+      }}
+    >
+      <Toolbar>
+        <Typography 
+          variant="h6" 
+          sx={{ 
+            flexGrow: 1,
+            fontWeight: 'bold',
+            background: 'linear-gradient(45deg, #00c6ff 30%, #0072ff 90%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent'
+          }}
+        >
+          ASPIRA
+        </Typography>
 
-            <Button
-              sx={{
-                color: "black",
-                backgroundColor: "gray",
-                mr: 1,
-                "&:hover": { backgroundColor: "darkgray" },
-              }}
+        {isAuthenticated && (
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            {/* Share Button */}
+            <IconButton
+              color="inherit"
               onClick={handleShare}
-              startIcon={<ShareIcon />}
+              aria-label="share"
+              sx={{ mx: 1 }}
             >
-              Share
-            </Button>
+              <Share />
+            </IconButton>
 
-            <Button
-              onClick={handleLogout}
-              sx={{
-                color: "black",
-                backgroundColor: "blue",
-                "&:hover": { backgroundColor: "gray" },
-              }}
-            >
-              Sign In
-            </Button>
+            {isMobile ? (
+              <>
+                <IconButton
+                  color="inherit"
+                  onClick={handleMenuOpen}
+                  aria-label="navigation menu"
+                >
+                  <MenuIcon />
+                </IconButton>
+                <Menu
+                  anchorEl={anchorEl}
+                  open={Boolean(anchorEl)}
+                  onClose={handleMenuClose}
+                >
+                  <MenuItem onClick={() => handleNavigation('/home')}>
+                    <Home sx={{ mr: 1 }} /> Home
+                  </MenuItem>
+                  <MenuItem onClick={() => handleNavigation('/rank')}>
+                    <EmojiEvents sx={{ mr: 1 }} /> Rankings
+                  </MenuItem>
+                  <MenuItem onClick={handleLogout}>
+                    <ExitToApp sx={{ mr: 1 }} /> Logout
+                  </MenuItem>
+                </Menu>
+              </>
+            ) : (
+              <>
+                <Button
+                  color="inherit"
+                  onClick={() => handleNavigation('/home')}
+                  startIcon={<Home />}
+                  sx={{
+                    mx: 1,
+                    '&:hover': {
+                      background: 'rgba(255,255,255,0.1)'
+                    }
+                  }}
+                >
+                  Home
+                </Button>
+                <Button
+                  color="inherit"
+                  onClick={() => handleNavigation('/rank')}
+                  startIcon={<EmojiEvents />}
+                  sx={{
+                    mx: 1,
+                    '&:hover': {
+                      background: 'rgba(255,255,255,0.1)'
+                    }
+                  }}
+                >
+                  Rankings
+                </Button>
+                <Button
+                  color="inherit"
+                  onClick={handleLogout}
+                  startIcon={<ExitToApp />}
+                  sx={{
+                    mx: 1,
+                    '&:hover': {
+                      background: 'rgba(255,255,255,0.1)'
+                    }
+                  }}
+                >
+                  Logout
+                </Button>
+              </>
+            )}
           </Box>
-        </Toolbar>
-      </AppBar>
-      <Box sx={{ height: "64px" }} />
-    </Box>
+        )}
+      </Toolbar>
+    </AppBar>
   );
 };
 
