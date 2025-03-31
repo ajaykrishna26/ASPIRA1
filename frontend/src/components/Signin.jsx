@@ -22,14 +22,14 @@ import {
 } from "firebase/auth";
 import { initializeApp } from "firebase/app";
 
-// Firebase configuration - replace with your actual values
+// Replace with your actual Firebase config
 const firebaseConfig = {
-  apiKey: "AIzaSyABC123XYZ456DEF789GHI", // Replace with your API key
-  authDomain: "your-project.firebaseapp.com",
-  projectId: "your-project-id",
-  storageBucket: "your-project.appspot.com",
-  messagingSenderId: "123456789012",
-  appId: "1:123456789012:web:abc123def456"
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
 };
 
 // Initialize Firebase
@@ -122,20 +122,24 @@ export default function SignIn({ setIsAuthenticated }) {
     setIsLoading(true);
     
     try {
+      console.log("Attempting", isSignUp ? "sign up" : "sign in");
+      
       if (isSignUp) {
-        await createUserWithEmailAndPassword(
+        const userCredential = await createUserWithEmailAndPassword(
           auth,
           formData.email,
           formData.password
         );
+        console.log("User created:", userCredential.user);
         localStorage.setItem("username", formData.username);
         localStorage.setItem("email", formData.email);
       } else {
-        await signInWithEmailAndPassword(
+        const userCredential = await signInWithEmailAndPassword(
           auth,
           formData.email,
           formData.password
         );
+        console.log("User signed in:", userCredential.user);
       }
       
       localStorage.setItem("isLoggedIn", "true");
@@ -143,7 +147,32 @@ export default function SignIn({ setIsAuthenticated }) {
       navigate("/u");
     } catch (error) {
       console.error("Authentication error:", error);
-      setAuthError(error.message);
+      let errorMessage = "Authentication failed";
+      
+      switch(error.code) {
+        case "auth/email-already-in-use":
+          errorMessage = "Email already in use";
+          break;
+        case "auth/invalid-email":
+          errorMessage = "Invalid email address";
+          break;
+        case "auth/weak-password":
+          errorMessage = "Password should be at least 6 characters";
+          break;
+        case "auth/user-not-found":
+          errorMessage = "No user found with this email";
+          break;
+        case "auth/wrong-password":
+          errorMessage = "Incorrect password";
+          break;
+        case "auth/network-request-failed":
+          errorMessage = "Network error. Please check your connection";
+          break;
+        default:
+          errorMessage = error.message;
+      }
+      
+      setAuthError(errorMessage);
     } finally {
       setIsLoading(false);
     }

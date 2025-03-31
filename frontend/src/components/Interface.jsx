@@ -7,19 +7,25 @@ import { styled } from "@mui/material/styles";
 const getBehavioralQuestions = () => [
   "Tell me about a time you faced a difficult challenge at work.",
   "Describe a situation where you had to work with a difficult team member.",
-  "Give an example of how you handled a mistake you made at work."
+  "Give an example of how you handled a mistake you made at work.",
+  "Why do you want to work with the company.",
+  "What do you think is better- being perfect and delivering late or being good and delivering on time."
 ];
 
 const getTechnicalQuestions = () => [
-  "Explain your approach to solving complex technical problems.",
-  "How do you stay updated with the latest technologies in your field?",
-  "Describe a technical project you're particularly proud of."
+  "What programming languages are you most familiar with.",
+  "Describe a time when you had to learn a new technology or programming language quickly.",
+  "Explain the concept of a binary search algorithm and its time complexity.",
+  "What are the different types of HTTP request methods.",
+  "How would you implement a responsive web design.",
 ];
 
 const getSituationalQuestions = () => [
   "What would you do if you disagreed with your manager's decision?",
   "How would you handle a tight deadline with multiple priorities?",
-  "Describe how you would onboard a new team member."
+  "Describe how you would onboard a new team member.",
+  "Have you been faced with a difficult decision without having much information? What did you do.",
+  "Can you share a time you had to deal with a difficult customer."
 ];
 
 // ========== AI Response Generators ==========
@@ -94,6 +100,53 @@ const ContentWrapper = styled(Box)({
   overflow: "auto",
 });
 
+const AIVideoContainer = styled(Box)({
+  position: 'relative',
+  width: '100%',
+  height: '300px',
+  borderRadius: '10px',
+  overflow: 'hidden',
+  marginBottom: '20px',
+  boxShadow: '0 4px 20px rgba(0, 198, 255, 0.3)',
+  border: '2px solid rgba(0, 198, 255, 0.5)',
+  backgroundColor: '#000',
+  '& video': {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+  },
+});
+
+const AISpeakingIndicator = styled(Box)({
+  position: 'absolute',
+  bottom: '20px',
+  left: '50%',
+  transform: 'translateX(-50%)',
+  display: 'flex',
+  gap: '5px',
+  '& span': {
+    display: 'inline-block',
+    width: '8px',
+    height: '8px',
+    borderRadius: '50%',
+    background: '#00c6ff',
+    animation: 'bounce 1.4s infinite ease-in-out',
+  },
+  '& span:nth-of-type(1)': {
+    animationDelay: '0s',
+  },
+  '& span:nth-of-type(2)': {
+    animationDelay: '0.2s',
+  },
+  '& span:nth-of-type(3)': {
+    animationDelay: '0.4s',
+  },
+  '@keyframes bounce': {
+    '0%, 80%, 100%': { transform: 'scale(0)' },
+    '40%': { transform: 'scale(1)' },
+  },
+});
+
 // ========== Main Component ==========
 const Interface = () => {
   const navigate = useNavigate();
@@ -103,8 +156,10 @@ const Interface = () => {
   const [isListening, setIsListening] = useState(false);
   const [isInterviewStarted, setIsInterviewStarted] = useState(false);
   const [questionBank, setQuestionBank] = useState([]);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const synthRef = useRef(null);
   const recognitionRef = useRef(null);
+  const videoRef = useRef(null);
 
   // Initialize speech and question bank
   useEffect(() => {
@@ -133,12 +188,46 @@ const Interface = () => {
 
     // Default to behavioral questions
     setQuestionBank(getBehavioralQuestions());
+
+    // Set up speech synthesis events
+    synth.onvoiceschanged = () => {
+      console.log("Voices loaded:", synth.getVoices());
+    };
+
+    return () => {
+      if (synth.speaking) {
+        synth.cancel();
+      }
+      if (recognition) {
+        recognition.abort();
+      }
+    };
   }, []);
 
   // Speak question when it changes
   useEffect(() => {
     if (isInterviewStarted && questionBank.length > 0) {
-      speakQuestion(synthRef.current, questionBank[questionIndex]);
+      const question = questionBank[questionIndex];
+      const utterance = new SpeechSynthesisUtterance(question);
+      utterance.rate = 0.9;
+      utterance.pitch = 1.0;
+      
+      utterance.onstart = () => {
+        setIsSpeaking(true);
+        if (videoRef.current) {
+          videoRef.current.play();
+        }
+      };
+      
+      utterance.onend = () => {
+        setIsSpeaking(false);
+        if (videoRef.current) {
+          videoRef.current.pause();
+          videoRef.current.currentTime = 0;
+        }
+      };
+      
+      synthRef.current.speak(utterance);
     }
   }, [questionIndex, isInterviewStarted, questionBank]);
 
@@ -282,21 +371,30 @@ const Interface = () => {
               </>
             ) : (
               <>
-                <Box sx={{ textAlign: "center", mb: 2 }}>
+                <AIVideoContainer>
                   <video
+                    ref={videoRef}
                     width="100%"
-                    height="auto"
-                    autoPlay
+                    height="100%"
                     loop
                     muted
-                    style={{ borderRadius: "10px", maxHeight: "200px" }}
+                    playsInline
+                    poster="https://media.istockphoto.com/id/1334436084/photo/3d-rendering-of-ai-artificial-intelligence-robot-avatar-with-digital-data-network-background.jpg?s=612x612&w=0&k=20&c=QfXx5j5D5zG3XJmQJwVvq6o6p3Q5Q5Q5Q5Q5Q5Q5Q5Q5Q="
                   >
-                    <source src="https://v.ftcdn.net/04/33/10/42/700_F_433104217_W6g0MGty3HdfcdQZURQV0AtjyiO3m1w8_ST.mp4" type="video/mp4" />
+                    <source src="https://assets.mixkit.co/videos/preview/mixkit-robot-humanoid-with-led-face-12230-large.mp4" type="video/mp4" />
+                    Your browser does not support the video tag.
                   </video>
-                  <Typography variant="h6" sx={{ mt: 1, fontWeight: "bold" }}>
-                    AI Interviewer
-                  </Typography>
-                </Box>
+                  {isSpeaking && (
+                    <AISpeakingIndicator>
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                    </AISpeakingIndicator>
+                  )}
+                </AIVideoContainer>
+                <Typography variant="h6" sx={{ mt: 1, fontWeight: "bold" }}>
+                  AI Interviewer
+                </Typography>
 
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                   <Typography variant="h5" sx={{ fontWeight: "bold" }}>
